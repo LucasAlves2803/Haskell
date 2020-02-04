@@ -1,0 +1,51 @@
+data Cmd = Atr String Exp
+		  | Seq Cmd Cmd
+		  | Dcl String -- declarar é criar a variável na memória
+      deriving Show		  
+data Exp = Num Int
+		| Add Exp Exp
+		| Sub Exp Exp
+		| Var String
+      deriving Show
+
+-- avalia uma expressão com variáveis
+avaliaexp :: Mem -> Exp -> Int
+avaliaexp _ (Num x) = x
+avaliaexp amb (Add exp1 exp2) = (avaliaexp amb exp1) + (avaliaexp amb exp2)
+avaliaexp amb (Sub exp1 exp2) = (avaliaexp amb exp1) - (avaliaexp amb exp2)
+avaliaexp amb (Var c) = consulta amb c
+
+-- consulta na memória
+consulta :: Mem -> String -> Int
+consulta ((id',v'):l) id = if id' == id then
+								v'
+						  else
+							consulta l id
+consulta [] id = 0
+
+-- escreve na memória
+escreve :: Mem -> String -> Int -> Mem
+escreve amb id c = (id , c):amb
+-- cria um ambiente
+amb :: [String]
+-- verifica uma expressão
+verificaExp :: [String] -> Exp -> Bool
+verificaExp _ (Num x) = True
+verificaExp amb ( _ exp1 exp2) = (verificaExp amb exp1) || (verificaExp amb exp2)
+verificaExp amb (Var x) = if (consulta amb x)
+								True
+						 else
+								False
+
+-- verifica um comando
+verificaCmd :: [String] -> Cmd -> ([String],Bool)
+verificaCmd amb Dcl str = (escreve amb (str,0), true)
+verificaCmd amb Atr str exp = if (verificaExp str exp)
+                                 (escreve amb str avalia exp, true)
+							  else
+							     (amb, false)
+verificaCmd amb Seq cmd1 cmd2 = verificaCmd (fst verificaCmd cmd1) cmd2 
+								 
+	  
+
+		
